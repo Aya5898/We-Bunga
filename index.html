@@ -1,0 +1,449 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>WeBunga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
+<style>
+/* Layout: colonne d'app mobile centrée, en-tête + fil défilant + barre d'onglets ; feuilles modales par le bas */
+:root{
+  --bg:#EEF2F9; --surface:#FFFFFF; --sunk:#F5F7FC; --fg:#15203A; --muted:#5E6A85; --line:#E1E6F0;
+  --blue:#0B63CE; --navy:#0A4FAE; --coral:#FF5E4B; --sun:#FFC700; --on-accent:#FFFFFF;
+  --blue-soft:#E3EEFC; --coral-soft:#FFE9E5;
+  --display:"Fredoka","Nunito Sans",system-ui,sans-serif;
+  --body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --shadow:0 1px 2px rgba(16,32,70,.06),0 6px 20px rgba(16,32,70,.06);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1222; --surface:#161F35; --sunk:#111A2D; --fg:#ECF1FA; --muted:#9AA7C2; --line:#25304A;
+  --blue:#4F96F2; --navy:#3D82E6; --coral:#FF7563; --sun:#FFD23F; --on-accent:#FFFFFF;
+  --blue-soft:#1B2C4C; --coral-soft:#3A2224; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1222; --surface:#161F35; --sunk:#111A2D; --fg:#ECF1FA; --muted:#9AA7C2; --line:#25304A;
+  --blue:#4F96F2; --navy:#3D82E6; --coral:#FF7563; --sun:#FFD23F; --on-accent:#FFFFFF;
+  --blue-soft:#1B2C4C; --coral-soft:#3A2224; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+*{box-sizing:border-box}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:8px}
+
+.app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;background:var(--bg);border-inline:1px solid var(--line)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.wordmark{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.01em;line-height:1}
+.wordmark .we{color:var(--navy)} .wordmark .bunga{color:var(--coral)}
+.dots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
+.dots i{width:7px;height:7px;border-radius:50%;display:block}
+.proto{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:4px 8px;border-radius:999px}
+
+main{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr auto 1fr 1fr;align-items:center;background:var(--surface);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}
+.tab{position:relative}
+.badge{position:absolute;top:0;left:calc(50% + 4px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--coral);color:var(--on-accent);font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid var(--surface);font-variant-numeric:tabular-nums}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:700;font-size:12px;color:var(--muted);padding:6px}
+.tab[aria-current="page"]{color:var(--blue)}
+.tab svg{width:24px;height:24px}
+.fab{width:56px;height:56px;border-radius:50%;background:var(--coral);color:var(--on-accent);display:grid;place-items:center;box-shadow:0 6px 16px rgba(255,94,75,.35);margin-top:-22px}
+.fab svg{width:28px;height:28px}
+
+/* composer prompt */
+.prompt{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:18px;padding:12px;box-shadow:var(--shadow)}
+.prompt button.ask{flex:1;text-align:left;background:var(--sunk);border:1px solid var(--line);border-radius:999px;padding:11px 16px;color:var(--muted);font-weight:600}
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.filters::-webkit-scrollbar{display:none}
+.fchip{flex:none;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:13px;color:var(--muted);white-space:nowrap}
+.fchip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+
+.avatar{flex:none;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-family:var(--display);overflow:hidden;background-size:cover;background-position:center}
+
+/* card */
+.card{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.card-head{display:flex;gap:10px;align-items:flex-start;padding:14px 14px 10px}
+.who{min-width:0;font-size:14px;color:var(--muted)}
+.who b{color:var(--fg)}
+.meta{font-size:12.5px;color:var(--muted);margin-top:2px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--blue-soft);color:var(--blue);white-space:nowrap}
+.cover{display:block;width:100%;padding:0;position:relative;aspect-ratio:16/8;max-width:100%;overflow:hidden}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover .grad{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.cover .big{font-size:64px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.18))}
+.cover .confetti{position:absolute;inset:0;background-image:radial-gradient(circle at 12% 28%,rgba(255,255,255,.55) 0 4px,transparent 5px),radial-gradient(circle at 82% 22%,rgba(255,255,255,.45) 0 5px,transparent 6px),radial-gradient(circle at 70% 78%,rgba(255,255,255,.4) 0 3px,transparent 4px),radial-gradient(circle at 25% 80%,rgba(255,255,255,.35) 0 6px,transparent 7px),radial-gradient(circle at 50% 12%,rgba(255,255,255,.4) 0 3px,transparent 4px)}
+.card-body{padding:12px 14px 4px}
+.card-body h3{font-family:var(--display);font-weight:600;font-size:20px;line-height:1.2;margin:0 0 4px;text-wrap:balance}
+.card-body p{margin:0;color:var(--fg);opacity:.86}
+.when{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--muted)}
+
+.rx-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 14px}
+.rx{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 4px;border-radius:14px;background:var(--sunk);border:1.5px solid transparent;min-width:0}
+.rx .e{font-size:20px;line-height:1.1}
+.rx .l{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.rx .n{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.rx[aria-pressed="true"]{border-color:var(--coral);background:var(--coral-soft)}
+.rx[aria-pressed="true"] .l{color:var(--coral)}
+.rx:active{transform:scale(.96)}
+.rx.pop .e{animation:pop .35s ease}
+@keyframes pop{40%{transform:scale(1.5)}}
+
+.card-foot{display:flex;gap:8px;padding:0 14px 14px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border-radius:999px;font-weight:800;font-size:14px}
+.btn.ghost{background:var(--sunk);border:1px solid var(--line)}
+.btn.primary{background:var(--coral);color:var(--on-accent)}
+.btn.blue{background:var(--blue);color:var(--on-accent)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn svg{width:18px;height:18px}
+.grow{flex:1}
+
+.summary{font-size:13px;color:var(--muted);padding:0 14px 10px}
+
+/* detail */
+.back{align-self:flex-start;font-weight:800;color:var(--blue);padding:4px 0}
+.section{background:var(--surface);border-radius:20px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.section h4{margin:0;font-family:var(--display);font-weight:600;font-size:17px}
+.stack{display:flex}
+.stack .avatar{border:2px solid var(--surface);margin-left:-8px}
+.stack .avatar:first-child{margin-left:0}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.msg{display:flex;gap:10px;align-items:flex-start}
+.bubble{background:var(--sunk);border-radius:4px 16px 16px 16px;padding:9px 12px;min-width:0;overflow-wrap:anywhere}
+.bubble b{display:block;font-size:13px}
+.bubble small{color:var(--muted);font-size:11.5px}
+.sugg{display:flex;gap:6px;flex-wrap:wrap}
+.sugg button{font-size:12.5px;font-weight:700;padding:6px 10px;border-radius:999px;background:var(--blue-soft);color:var(--blue);text-align:left}
+textarea,input[type=text],input[type=date]{width:100%;background:var(--sunk);border:1px solid var(--line);border-radius:14px;padding:11px 13px;resize:vertical}
+textarea:focus,input:focus{outline:2px solid var(--blue);outline-offset:0}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:20px 8px}
+
+/* profile */
+.phead{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.pbanner{height:84px;background:linear-gradient(110deg,var(--blue) 0 38%,var(--coral) 38% 70%,var(--sun) 70%)}
+.pinfo{padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
+.pinfo .avatar{margin-top:-40px;border:4px solid var(--surface)}
+.pinfo h2{font-family:var(--display);font-weight:700;font-size:24px;margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.stat{background:var(--sunk);border-radius:14px;padding:10px;text-align:center}
+.stat b{display:block;font-family:var(--display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted);font-weight:700}
+.h-label{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:6px 2px 0}
+
+/* sheet */
+.sheet{position:fixed;inset:0;background:rgba(8,14,30,.5);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet-panel{background:var(--surface);width:100%;max-width:480px;max-height:92%;overflow-y:auto;border-radius:24px 24px 0 0;padding:10px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:up .25s ease}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.grabber{width:40px;height:5px;border-radius:9px;background:var(--line);align-self:center}
+.sheet-title{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheet-title h3{margin:0;font-family:var(--display);font-weight:600;font-size:21px}
+.x{width:34px;height:34px;border-radius:50%;background:var(--sunk);font-size:20px;line-height:1}
+.catgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.cat{display:flex;align-items:center;gap:10px;text-align:left;padding:12px;border-radius:16px;border:1.5px solid var(--line);background:var(--sunk);font-weight:700;font-size:13.5px;min-width:0}
+.cat .ic{font-size:24px;flex:none}
+.cat[aria-pressed="true"]{border-color:var(--coral);background:var(--coral-soft)}
+.steps{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.photo-pick{border:1.5px dashed var(--line);border-radius:16px;padding:14px;text-align:center;font-weight:700;color:var(--muted);background:var(--sunk);width:100%}
+.photo-prev{border-radius:16px;overflow:hidden;aspect-ratio:16/8;max-width:100%}
+.photo-prev img{width:100%;height:100%;object-fit:cover}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border-radius:999px;padding:4px;border:1px solid var(--line)}
+.seg button{padding:8px;border-radius:999px;font-weight:800;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--sunk);border:1px solid var(--line);border-radius:14px;padding:6px 6px 6px 12px}
+.linkbox code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:700;user-select:all}
+.contact{display:flex;align-items:center;gap:10px;padding:6px 0}
+.contact .nm{flex:1;min-width:0}
+.contact .nm small{display:block;color:var(--muted);font-size:12px}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn.done{background:var(--blue-soft);color:var(--blue)}
+
+.sr{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none}
+label.btn,label.photo-pick,label.avlab{cursor:pointer}
+.photo-pick{display:block}
+.avlab{position:relative;align-self:flex-start;margin-top:-40px}
+.avlab .avatar{margin-top:0!important}
+.avlab .cam{position:absolute;right:2px;bottom:2px;background:var(--coral);color:var(--on-accent);font-size:11px;font-weight:800;padding:3px 7px;border-radius:999px;border:2px solid var(--surface)}
+.notif{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:12px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow);position:relative}
+.notif.unread{background:var(--blue-soft)}
+.notif .tx{flex:1;min-width:0;font-size:14px}
+.notif .tx small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.notif .dot{width:9px;height:9px;border-radius:50%;background:var(--coral);flex:none;margin-top:6px}
+.notif .acts{display:flex;gap:6px;margin-top:8px}
+.list{display:flex;flex-direction:column;gap:2px}
+.ttl{font-family:var(--display);font-weight:600;font-size:22px;margin:0}
+.welcome{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;display:flex;justify-content:center}
+.wl{width:100%;max-width:480px;padding:28px 20px calc(28px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+.wl-mark{font-family:var(--display);font-weight:700;font-size:44px;line-height:1;letter-spacing:-.01em}
+.wl-mark .we{color:var(--navy)}.wl-mark .bunga{color:var(--coral)}
+.wl-bar{display:flex;height:8px;border-radius:9px;overflow:hidden;width:120px}
+.wl-bar i{flex:1}
+.wl h1{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
+.wl .lead{margin:0;font-size:16px;color:var(--muted);max-width:60ch}
+.wl-steps{display:flex;flex-direction:column;gap:10px}
+.wl-step{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;background:var(--surface);border-radius:18px;padding:14px;box-shadow:var(--shadow)}
+.wl-step .n{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:20px;color:var(--on-accent)}
+.wl-step b{display:block;font-size:15.5px}
+.wl-step span{color:var(--muted);font-size:14px}
+.wl-univ{display:flex;flex-wrap:wrap;gap:6px}
+.wl-univ span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700}
+.wl-note{font-size:12.5px;color:var(--muted);margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:11px 16px;border-radius:14px;font-weight:700;font-size:14px;z-index:30;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.2);animation:up .2s ease}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="wordmark"><span class="we">We</span><span class="bunga">Bunga</span><span class="dots" aria-hidden="true"><i style="background:var(--blue)"></i><i style="background:var(--coral)"></i><i style="background:var(--sun)"></i></span></div>
+    <span class="proto">Prototype</span>
+  </header>
+  <main id="main"></main>
+  <nav class="tabs" aria-label="Navigation">
+    <button class="tab" data-act="tab" data-v="feed" id="tabFeed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Fil</button>
+    <button class="tab" data-act="tab" data-v="proches" id="tabProches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.2c3 .2 5 2.3 5 5.3"/></svg>Proches</button>
+    <button class="fab" data-act="create" aria-label="Créer une célébration"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="tab" data-act="tab" data-v="notifs" id="tabNotifs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>Alertes<span class="badge" id="badge" hidden></span></button>
+    <button class="tab" data-act="tab" data-v="profile" id="tabProfile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profil</button>
+  </nav>
+</div>
+<div id="welcome" class="welcome" role="dialog" aria-modal="true" aria-labelledby="wlTitle"><div class="wl">
+  <div class="wl-mark"><span class="we">We</span><span class="bunga">Bunga</span></div>
+  <div class="wl-bar" aria-hidden="true"><i style="background:var(--blue)"></i><i style="background:var(--coral)"></i><i style="background:var(--sun)"></i></div>
+  <h1 id="wlTitle">Le réseau social où l’on célèbre les réussites de ses proches.</h1>
+  <p class="lead">Un diplôme, un anniversaire, une promotion, un bébé, un permis obtenu… Sur WeBunga, chaque publication répond à une seule question : qu’est-ce qu’on célèbre ?</p>
+  <div class="wl-steps">
+   <div class="wl-step"><span class="n" style="background:var(--blue)">1</span><div><b>Vous réalisez quelque chose</b><span>Vous créez votre célébration en choisissant son univers, avec un titre et une photo.</span></div></div>
+   <div class="wl-step"><span class="n" style="background:var(--coral)">2</span><div><b>Vos proches vous félicitent</b><span>Ils réagissent avec des réactions adaptées (🎓 Diplômé·e, 🎂 Joyeux anniv…) et vous écrivent un message personnel.</span></div></div>
+   <div class="wl-step"><span class="n" style="background:var(--sun);color:#15203A">3</span><div><b>Vous invitez les autres</b><span>Partagez votre célébration pour que d’autres la rejoignent et fêtent avec vous.</span></div></div>
+  </div>
+  <div class="wl-univ" aria-label="Exemples d’univers"><span>🎂 Anniversaires</span><span>💍 Mariage</span><span>🎓 Études</span><span>💼 Carrière</span><span>👶 Naissance</span><span>🏆 Réussites</span><span>📈 Entreprise</span><span>✨ Et plus</span></div>
+  <button class="btn primary block" id="wlGo" data-act="enter" style="padding:14px;font-size:16px">Découvrir WeBunga</button>
+  <p class="wl-note">Prototype de démonstration : les personnes et célébrations affichées sont des exemples. Essayez librement, rien n’est enregistré.</p>
+ </div></div>
+<div id="sheet" class="sheet" hidden><div class="sheet-panel" id="sheetPanel" role="dialog" aria-modal="true"></div></div>
+<div id="toast" class="toast" hidden role="status"></div>
+<input type="file" id="fileIn" accept="image/*" class="sr" tabindex="-1" aria-hidden="true">
+
+<script>
+const CATS=[
+ {id:'anniv',label:'Anniversaire',icon:'🎂',c:['#FF5E4B','#FFB238'],rx:[['🎂','Joyeux anniv'],['🎉','Fête !'],['🎁','Cadeau'],['❤️','Affection']],msg:['Joyeux anniversaire ! Que cette nouvelle année te comble.','Profite bien de ta journée, tu le mérites !']},
+ {id:'mariage',label:'Mariage & fiançailles',icon:'💍',c:['#FF7A8A','#FFC700'],rx:[['💍','Félicitations'],['🥂','Santé !'],['🕊️','Bénédictions'],['❤️','Amour']],msg:['Tous nos vœux de bonheur aux mariés !','Que Dieu bénisse votre union.']},
+ {id:'etudes',label:'Études & diplômes',icon:'🎓',c:['#0B63CE','#3FA2FF'],rx:[['🎓','Diplômé·e'],['👏','Bravo'],['📚','Bien mérité'],['🌟','Fier·e de toi']],msg:['Bravo, tous ces efforts ont payé !','Félicitations, la suite sera encore plus belle.']},
+ {id:'carriere',label:'Carrière & travail',icon:'💼',c:['#0A4FAE','#0B63CE'],rx:[['💼','Bravo'],['🚀','Ça décolle'],['🤝','Respect'],['👏','Chapeau']],msg:['Félicitations pour cette promotion !','Plein succès dans cette nouvelle mission.']},
+ {id:'naissance',label:'Naissance & famille',icon:'👶',c:['#FFB238','#FFC700'],rx:[['👶','Bienvenue'],['🍼','Tendresse'],['🙏','Bénédiction'],['❤️','Amour']],msg:['Bienvenue au bébé et félicitations aux parents !','Que de joie pour toute la famille.']},
+ {id:'nouvelle',label:'Nouvelle vie & voyages',icon:'🏠',c:['#1FA187','#3FA2FF'],rx:[['🔑','Bienvenue'],['✈️','Bon voyage'],['🌍','Nouveau départ'],['🎉','Génial']],msg:['Bravo pour ce nouveau départ !','Profite bien de cette nouvelle étape.']},
+ {id:'reussite',label:'Réussites',icon:'🏆',c:['#FFC700','#FF5E4B'],rx:[['🏆','Champion·ne'],['💪','Quelle force'],['👏','Bravo'],['🌟','Inspirant']],msg:['Quelle réussite, bravo !','Tu inspires tout le monde, félicitations.']},
+ {id:'entreprise',label:'Entreprise',icon:'📈',c:['#0A4FAE','#1FA187'],rx:[['📈','Croissance'],['🚀','Lancement'],['🤝','Partenaire'],['👏','Bravo l’équipe']],msg:['Bravo à toute l’équipe pour ce cap !','Longue vie à ton entreprise !']},
+ {id:'communaute',label:'Communauté & retrouvailles',icon:'🤗',c:['#FF5E4B','#0B63CE'],rx:[['🤗','Retrouvailles'],['🎶','Ambiance'],['❤️','Ensemble'],['🎉','Top']],msg:['Quel bonheur de se retrouver !','Vivement la prochaine fois.']},
+ {id:'perso',label:'Ma célébration',icon:'✨',c:['#0B63CE','#FFC700'],rx:[['🎉','Bravo'],['👏','Applaudis'],['❤️','Content·e'],['🌟','Génial']],msg:['Félicitations, c’est mérité !','Trop content·e pour toi !']},
+];
+const cat=id=>CATS.find(c=>c.id===id);
+const U={
+ me:{name:'Kobe M.',bio:'BTP & ingénierie. J’aime célébrer chaque étape.',city:'Kinshasa',photo:null,col:'#0B63CE'},
+ grace:{name:'Grâce Mbuyi',col:'#FF5E4B',city:'Kinshasa'},
+ patrick:{name:'Patrick Ilunga',col:'#0A4FAE',city:'Lubumbashi'},
+ sarah:{name:'Sarah Kabeya',col:'#D69A00',city:'Kinshasa'},
+ junior:{name:'Junior Tshibangu',col:'#1FA187',city:'Kinshasa'},
+ divine:{name:'Divine Mukendi',col:'#C2410C',city:'Matadi'},
+ ruth:{name:'Ruth Lukusa',col:'#6D4BD8',city:'Kinshasa'},
+ michel:{name:'Michel Kasongo',col:'#475569',city:'Pas encore sur WeBunga',off:true,rel:'none'},
+ esther:{name:'Esther Ngalula',col:'#0E7490',city:'Kinshasa',rel:'request'},
+ joel:{name:'Joël Kabamba',col:'#B45309',city:'Kolwezi',rel:'none',mutual:3},
+ naomi:{name:'Naomi Mwamba',col:'#BE185D',city:'Kinshasa',rel:'none',mutual:5},
+ christian:{name:'Christian Mutombo',col:'#15803D',city:'Goma',rel:'none',mutual:1},
+};
+['grace','patrick','sarah','junior','divine','ruth'].forEach(k=>U[k].rel='proche');
+const proches=()=>Object.keys(U).filter(k=>k!=='me'&&U[k].rel==='proche');
+const now=Date.now(), M=60000;
+let S={view:'feed',detail:null,filter:'all',celebs:[
+ {id:'c1',uid:'grace',cat:'etudes',title:'Mémoire de Master soutenu !',desc:'Après deux ans de travail, j’ai soutenu mon mémoire en génie civil avec grande distinction. Merci à tous ceux qui m’ont portée.',date:'2026-10-02',t:now-2*60*M,rx:[34,18,7,12],mine:null,parts:['grace','sarah','ruth','junior'],msgs:[{uid:'sarah',text:'Grande distinction ! Je savais que tu allais tout déchirer.',t:now-90*M},{uid:'ruth',text:'Félicitations ma sœur, on fête ça samedi ?',t:now-60*M}],inv:[]},
+ {id:'c2',uid:'patrick',cat:'carriere',title:'Promu chef de chantier',desc:'Nouvelle responsabilité sur le chantier du pont de Kasapa. Une équipe de 25 personnes à coordonner.',date:'2026-10-01',t:now-5*60*M,rx:[21,9,6,4],mine:null,parts:['patrick','divine'],msgs:[{uid:'divine',text:'Bravo Patrick, c’est mérité !',t:now-4*60*M}],inv:[]},
+ {id:'c3',uid:'sarah',cat:'anniv',title:'30 ans aujourd’hui',desc:'Merci la vie pour cette belle décennie. Petit dîner entre proches ce soir à Gombe.',date:'2026-10-02',t:now-20*60*M,rx:[48,22,10,15],mine:2,parts:['sarah','grace','me','ruth','junior'],msgs:[{uid:'grace',text:'Joyeux anniversaire ma belle ! 30 ans et toujours aussi rayonnante.',t:now-19*60*M},{uid:'me',text:'Joyeux anniversaire Sarah, à ce soir !',t:now-18*60*M}],inv:[]},
+ {id:'c4',uid:'junior',cat:'reussite',title:'Permis obtenu du premier coup',desc:'Code et conduite validés. La route est à moi.',date:'2026-09-30',t:now-30*60*M,rx:[15,8,11,3],mine:null,parts:['junior'],msgs:[],inv:[]},
+ {id:'c5',uid:'divine',cat:'entreprise',title:'Ma boutique de pagnes fête sa première année',desc:'Un an, 400 clientes et une deuxième vitrine qui ouvre en novembre. Merci pour votre fidélité.',date:'2026-09-29',t:now-50*60*M,rx:[27,14,9,19],mine:null,parts:['divine','grace','patrick'],msgs:[{uid:'patrick',text:'Longue vie à la boutique !',t:now-45*60*M}],inv:[]},
+ {id:'c6',uid:'me',cat:'etudes',title:'Formation en gestion de projet terminée',desc:'Trois mois de cours du soir validés. Prochaine étape : appliquer tout ça sur nos chantiers.',date:'2026-09-28',t:now-3*24*60*M,rx:[19,12,5,8],mine:null,parts:['me','patrick','grace'],msgs:[{uid:'patrick',text:'Bien joué Kobe, on va en profiter sur le terrain !',t:now-3*24*60*M+80*M}],inv:['patrick','grace']},
+ {id:'c7',uid:'joel',cat:'naissance',title:'Bienvenue à notre fille Ketsia',desc:'Née ce matin à 6 h 40, 3,2 kg. La maman et le bébé vont très bien.',date:'2026-10-03',t:now-8*60*M,rx:[41,17,22,30],mine:null,parts:['joel'],msgs:[],inv:[]},
+ {id:'c8',uid:'esther',cat:'nouvelle',title:'Enfin chez moi à Limete',desc:'Les clés de mon premier appartement. Pendaison de crémaillère bientôt !',date:'2026-10-01',t:now-26*60*M,rx:[12,4,6,9],mine:null,parts:['esther'],msgs:[],inv:[]},
+]};
+S.notifs=[
+ {id:'n1',uid:'esther',type:'request',text:'souhaite faire partie de vos proches.',t:now-40*M,read:false},
+ {id:'n2',uid:'grace',type:'invite',cid:'c1',text:'vous invite à sa célébration « Mémoire de Master soutenu ! ».',t:now-100*M,read:false},
+ {id:'n3',uid:'sarah',type:'react',cid:'c6',text:'a réagi 📚 à votre célébration.',t:now-2*24*60*M,read:true},
+ {id:'n4',uid:'patrick',type:'msg',cid:'c6',text:'a écrit un message sur votre célébration.',t:now-3*24*60*M+80*M,read:true},
+];
+let nid=10;function addNotif(n){S.notifs.unshift(Object.assign({id:'n'+(nid++),t:Date.now(),read:S.view==='notifs'},n));updateBadge()}
+function updateBadge(){const n=S.notifs.filter(x=>!x.read).length,b=$('#badge');if(!b)return;b.textContent=n>9?'9+':n;b.hidden=!n}
+let draft=null, fileTarget=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials=n=>n.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+function av(uid,size=40){const u=U[uid];const st=`width:${size}px;height:${size}px;font-size:${Math.round(size*.38)}px;background-color:${u.col};`+(u.photo?`background-image:url(${u.photo});`:'');return `<span class="avatar" style="${st}" aria-hidden="true">${u.photo?'':esc(initials(u.name))}</span>`}
+function ago(t){const m=Math.round((Date.now()-t)/M);if(m<1)return'à l’instant';if(m<60)return`il y a ${m} min`;const h=Math.round(m/60);if(h<24)return`il y a ${h} h`;const d=Math.round(h/24);return d===1?'hier':`il y a ${d} jours`}
+function fdate(d){if(!d)return'';const x=new Date(d+'T12:00');return x.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}
+const total=c=>c.rx.reduce((a,b)=>a+b,0);
+const get=id=>S.celebs.find(c=>c.id===id);
+
+function cover(c){const k=cat(c.cat);
+ if(c.photo)return `<button class="cover" data-act="open" data-id="${c.id}" aria-label="Ouvrir la célébration"><img src="${c.photo}" alt=""></button>`;
+ return `<button class="cover" data-act="open" data-id="${c.id}" aria-label="Ouvrir la célébration"><span class="grad" style="background:linear-gradient(135deg,${k.c[0]},${k.c[1]})"><span class="confetti"></span><span class="big">${k.icon}</span></span></button>`}
+function rxRow(c){const k=cat(c.cat);return `<div class="rx-row" role="group" aria-label="Réactions">${k.rx.map((r,i)=>`<button class="rx" data-act="rx" data-id="${c.id}" data-i="${i}" aria-pressed="${c.mine===i}"><span class="e">${r[0]}</span><span class="l">${esc(r[1])}</span><span class="n">${c.rx[i]}</span></button>`).join('')}</div>`}
+function card(c,full){const k=cat(c.cat),u=U[c.uid];const mineOwn=c.uid==='me';
+ const others=c.parts.filter(p=>p!==c.uid);
+ return `<article class="card">
+  <div class="card-head">${av(c.uid,42)}<div class="who"><b>${esc(mineOwn?'Vous':u.name)}</b> ${mineOwn?'célébrez':'célèbre'} <span class="chip">${k.icon} ${esc(k.label)}</span><div class="meta">${ago(c.t)}${c.vis==='public'?' · Public':' · Proches'}</div></div></div>
+  ${cover(c)}
+  <div class="card-body"><h3>${esc(c.title)}</h3>${c.desc?`<p>${esc(c.desc)}</p>`:''}${c.date?`<span class="when">Le ${fdate(c.date)}</span>`:''}</div>
+  ${rxRow(c)}
+  <div class="summary">${total(c)} félicitations · ${c.msgs.length} message${c.msgs.length>1?'s':''} · ${c.parts.length} participant${c.parts.length>1?'s':''}</div>
+  ${full?'':`<div class="card-foot"><button class="btn ghost grow" data-act="open" data-id="${c.id}">Écrire un message</button><button class="btn ghost" data-act="invite" data-id="${c.id}">Inviter</button></div>`}
+ </article>`}
+
+function renderFeed(){
+ const vis=S.celebs.filter(c=>c.uid==='me'||U[c.uid].rel==='proche');
+ const used=[...new Set(vis.map(c=>c.cat))];
+ const list=vis.filter(c=>S.filter==='all'||c.cat===S.filter);
+ return `<div class="prompt">${av('me',40)}<button class="ask" data-act="create">Qu’est-ce que tu célèbres aujourd’hui ?</button></div>
+ <div class="filters" role="group" aria-label="Filtrer par univers"><button class="fchip" data-act="filter" data-v="all" aria-pressed="${S.filter==='all'}">Tout</button>${used.map(id=>{const k=cat(id);return `<button class="fchip" data-act="filter" data-v="${id}" aria-pressed="${S.filter===id}">${k.icon} ${esc(k.label)}</button>`}).join('')}</div>
+ ${list.map(c=>card(c)).join('')||'<div class="empty">Aucune célébration pour le moment. Ajoutez des proches pour voir leurs moments.</div>'}`}
+
+function renderDetail(){const c=get(S.detail);if(!c){S.view='feed';return renderFeed()}
+ const k=cat(c.cat),joined=c.parts.includes('me'),own=c.uid==='me';
+ return `<button class="back" data-act="back">← Retour au fil</button>
+ ${card(c,true)}
+ ${own?`<section class="section"><h4>Photo de la célébration</h4><div class="row"><label class="btn ghost grow" for="fileIn" data-act="photo" data-v="c:${c.id}">${c.photo?'Changer la photo':'Ajouter une photo'}</label>${c.photo?`<button class="btn ghost" data-act="rmphoto" data-v="c:${c.id}">Retirer</button>`:''}</div></section>`:''}
+ <section class="section"><h4>Participants · ${c.parts.length}</h4>
+  <div class="row"><div class="stack">${c.parts.slice(0,7).map(p=>av(p,34)).join('')}</div><span class="meta">${c.parts.map(p=>p==='me'?'Vous':U[p].name.split(' ')[0]).slice(0,4).join(', ')}${c.parts.length>4?'…':''}</span></div>
+  <div class="row">${!own&&!joined?`<button class="btn primary grow" data-act="join" data-id="${c.id}">Rejoindre la célébration</button>`:''}${!own&&joined?`<span class="chip">Vous participez</span>`:''}<button class="btn blue grow" data-act="invite" data-id="${c.id}">Inviter des proches</button></div>
+ </section>
+ <section class="section"><h4>Messages de célébration</h4>
+  ${c.msgs.length?c.msgs.map(m=>`<div class="msg">${av(m.uid,34)}<div class="bubble"><b>${esc(m.uid==='me'?'Vous':U[m.uid].name)}</b>${esc(m.text)}<br><small>${ago(m.t)}</small></div></div>`).join(''):'<div class="empty">Soyez le premier à écrire un mot.</div>'}
+  ${own?'':`<div class="sugg">${k.msg.map(t=>`<button data-act="sugg" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>`}
+  <label class="f" for="msgIn">${own?'Remercier vos proches':'Votre message personnel'}<textarea id="msgIn" rows="3" placeholder="${own?'Merci à tous pour vos messages…':'Écrivez un mot pour '+esc(U[c.uid].name.split(' ')[0])+'…'}"></textarea></label>
+  <button class="btn primary block" data-act="send" data-id="${c.id}">Envoyer le message</button>
+ </section>`}
+
+function renderProfile(){const me=U.me,mine=S.celebs.filter(c=>c.uid==='me');
+ const recv=mine.reduce((a,c)=>a+total(c),0);
+ return `<div class="phead"><div class="pbanner"></div><div class="pinfo"><label class="avlab" for="fileIn" data-act="photo" data-v="profile" title="Changer la photo de profil">${av('me',84)}<span class="cam">Photo</span></label>
+  <h2>${esc(me.name)}</h2><div>${esc(me.bio)}</div><div class="meta">${esc(me.city)}</div>
+  <div class="stats"><div class="stat"><b>${mine.length}</b><span>Célébrations</span></div><div class="stat"><b>${recv}</b><span>Félicitations</span></div><div class="stat"><b>${proches().length}</b><span>Proches</span></div></div>
+  <div class="row"><button class="btn ghost grow" data-act="editprofile">Modifier le profil</button><button class="btn primary grow" data-act="create">Nouvelle célébration</button></div>
+ </div></div>
+ <div class="h-label">Mes célébrations</div>
+ ${mine.map(c=>card(c)).join('')||'<div class="empty">Vous n’avez encore rien célébré. Lancez-vous !</div>'}`}
+
+function personRow(k,actions,sub){const u=U[k];return `<div class="contact" data-name="${esc(u.name.toLowerCase())}">${av(k,42)}<div class="nm"><b>${esc(u.name)}</b><small>${esc(sub||u.city||'')}</small></div>${actions}</div>`}
+function renderProches(){
+ const req=Object.keys(U).filter(k=>U[k].rel==='request'),pr=proches(),sug=Object.keys(U).filter(k=>!U[k].off&&k!=='me'&&(U[k].rel==='none'||U[k].rel==='sent')),off=Object.keys(U).filter(k=>U[k].off);
+ return `<h2 class="ttl">Mes proches</h2>
+ <label class="f" for="searchIn">Rechercher<input type="text" id="searchIn" placeholder="Nom d’un ami, d’un collègue…" autocomplete="off"></label>
+ ${req.length?`<section class="section"><h4>Demandes reçues · ${req.length}</h4><div class="list">${req.map(k=>personRow(k,`<button class="btn sm primary" data-act="accept" data-v="${k}">Accepter</button><button class="btn sm ghost" data-act="decline" data-v="${k}">Refuser</button>`)).join('')}</div></section>`:''}
+ <section class="section"><h4>Vos proches · ${pr.length}</h4><div class="list">${pr.map(k=>personRow(k,S.confirmRm===k?`<button class="btn sm primary" data-act="removefriend" data-v="${k}">Confirmer</button><button class="btn sm ghost" data-act="cancelrm">Annuler</button>`:`<button class="btn sm ghost" data-act="askrm" data-v="${k}">Retirer</button>`)).join('')||'<div class="empty">Vous n’avez pas encore de proches.</div>'}</div></section>
+ ${sug.length?`<section class="section"><h4>Suggestions</h4><div class="list">${sug.map(k=>personRow(k,U[k].rel==='sent'?`<button class="btn sm done" data-act="cancelreq" data-v="${k}">Demande envoyée</button>`:`<button class="btn sm blue" data-act="addfriend" data-v="${k}">Ajouter</button>`,`${U[k].city} · ${U[k].mutual||0} proche${(U[k].mutual||0)>1?'s':''} en commun`)).join('')}</div></section>`:''}
+ <section class="section"><h4>Pas encore sur WeBunga</h4><div class="meta">Invitez vos proches à rejoindre WeBunga pour célébrer ensemble.</div><div class="list">${off.map(k=>personRow(k,`<button class="btn sm ghost" data-act="copy" data-v="webunga.app/rejoindre?de=kobe">Copier le lien</button>`)).join('')}</div></section>`}
+function renderNotifs(){
+ const ic={request:'Demande',invite:'Invitation',react:'Réaction',msg:'Message',accepted:'Proche'};
+ return `<h2 class="ttl">Notifications</h2>
+ ${S.notifs.length?S.notifs.map(n=>{const pending=n.type==='request'&&U[n.uid].rel==='request';
+  return `<div class="notif ${n.read?'':'unread'}" ${n.cid?`data-act="notif" data-id="${n.id}" role="button" tabindex="0"`:''}>${av(n.uid,42)}<div class="tx"><b>${esc(U[n.uid].name)}</b> ${esc(n.text)}<small>${ic[n.type]||''} · ${ago(n.t)}</small>
+  ${pending?`<div class="acts"><button class="btn sm primary" data-act="accept" data-v="${n.uid}">Accepter</button><button class="btn sm ghost" data-act="decline" data-v="${n.uid}">Refuser</button></div>`:''}</div>${n.read?'':'<span class="dot" aria-label="Non lue"></span>'}</div>`}).join(''):'<div class="empty">Aucune notification pour le moment.</div>'}`}
+function render(){const m=$('#main');const keep=$('#msgIn')?.value;
+ m.innerHTML=S.view==='detail'?renderDetail():S.view==='profile'?renderProfile():S.view==='proches'?renderProches():S.view==='notifs'?renderNotifs():renderFeed();
+ if(keep&&$('#msgIn'))$('#msgIn').value=keep;
+ const cur={feed:'tabFeed',detail:'tabFeed',proches:'tabProches',notifs:'tabNotifs',profile:'tabProfile'}[S.view];
+ ['tabFeed','tabProches','tabNotifs','tabProfile'].forEach(t=>$('#'+t).setAttribute('aria-current',t===cur?'page':'false'));
+ if(S.view==='notifs')S.notifs.forEach(n=>n.read=true);
+ updateBadge();}
+
+/* sheets */
+function openSheet(html){$('#sheetPanel').innerHTML=`<div class="grabber"></div>`+html;$('#sheet').hidden=false}
+function closeSheet(){$('#sheet').hidden=true;$('#sheetPanel').innerHTML=''}
+function sheetHead(t){return `<div class="sheet-title"><h3>${t}</h3><button class="x" data-act="close" aria-label="Fermer">×</button></div>`}
+
+function createSheet(){
+ if(draft.step===1){openSheet(sheetHead('Créer une célébration')+`<div class="steps">Étape 1 sur 2 · Qu’est-ce qu’on célèbre ?</div>
+  <div class="catgrid">${CATS.map(k=>`<button class="cat" data-act="pickcat" data-v="${k.id}" aria-pressed="${draft.cat===k.id}"><span class="ic">${k.icon}</span><span>${esc(k.label)}</span></button>`).join('')}</div>
+  <button class="btn primary block" data-act="step2" ${draft.cat?'':'disabled'}>Continuer</button>`);return}
+ const k=cat(draft.cat);
+ openSheet(sheetHead(`${k.icon} ${esc(k.label)}`)+`<div class="steps">Étape 2 sur 2 · Les détails</div>
+  <label class="f" for="dTitle">Titre de la célébration<input type="text" id="dTitle" data-field="title" maxlength="80" placeholder="Ex. : J’ai réussi mon examen final !" value="${esc(draft.title)}"></label>
+  <label class="f" for="dDate">Date<input type="date" id="dDate" data-field="date" value="${esc(draft.date)}"></label>
+  <label class="f" for="dDesc">Racontez en quelques mots<textarea id="dDesc" data-field="desc" rows="3" placeholder="Ce que ce moment représente pour vous…">${esc(draft.desc)}</textarea></label>
+  ${draft.photo?`<div class="photo-prev"><img src="${draft.photo}" alt="Aperçu"></div><label class="btn ghost" for="fileIn" data-act="photo" data-v="draft">Changer la photo</label> <button class="btn ghost" data-act="rmphoto" data-v="draft">Retirer la photo</button>`:`<label class="photo-pick" for="fileIn" data-act="photo" data-v="draft">+ Ajouter une photo (facultatif)</label>`}
+  <div class="f" style="display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:13px">Qui peut voir ?<div class="seg"><button data-act="vis" data-v="proches" aria-pressed="${draft.vis==='proches'}">Mes proches</button><button data-act="vis" data-v="public" aria-pressed="${draft.vis==='public'}">Public</button></div></div>
+  <div class="row"><button class="btn ghost" data-act="step1">Retour</button><button class="btn primary grow" data-act="publish" id="pubBtn" ${draft.title.trim()?'':'disabled'}>Publier la célébration</button></div>`)}
+
+function inviteSheet(id){const c=get(id);
+ const link='webunga.app/c/'+c.id+'-'+c.title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,24);
+ const contacts=Object.keys(U).filter(k=>k!=='me'&&!c.parts.includes(k)&&(U[k].rel==='proche'||U[k].off));
+ openSheet(sheetHead('Inviter à la célébration')+`<div class="meta">« ${esc(c.title)} »</div>
+  <div class="linkbox"><code id="lnk">${esc(link)}</code><button class="btn blue sm" data-act="copy" data-v="${esc(link)}">Copier</button></div>
+  <div class="h-label">Vos contacts</div>
+  ${contacts.length?contacts.map(k=>{const done=c.inv.includes(k);return `<div class="contact">${av(k,38)}<div class="nm"><b>${esc(U[k].name)}</b><small>${esc(U[k].city||'')}</small></div><button class="btn sm ${done?'done':'primary'}" data-act="inv" data-id="${c.id}" data-v="${k}">${done?'Invité ✓':'Inviter'}</button></div>`}).join(''):'<div class="empty">Tous vos proches participent déjà.</div>'}
+  <button class="btn ghost block" data-act="close">Terminé</button>`)}
+
+function profileSheet(){const me=U.me;
+ openSheet(sheetHead('Modifier le profil')+`<div class="row">${av('me',64)}<label class="btn ghost" for="fileIn" data-act="photo" data-v="profile">Changer la photo</label>${U.me.photo?'<button class="btn ghost" data-act="rmphoto" data-v="profile">Retirer</button>':''}</div>
+  <label class="f" for="pName">Nom<input type="text" id="pName" value="${esc(me.name)}" maxlength="40"></label>
+  <label class="f" for="pBio">Bio<textarea id="pBio" rows="2" maxlength="140">${esc(me.bio)}</textarea></label>
+  <label class="f" for="pCity">Ville<input type="text" id="pCity" value="${esc(me.city)}" maxlength="40"></label>
+  <button class="btn primary block" data-act="saveprofile">Enregistrer</button>`)}
+
+let tt;function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2600)}
+
+function simulateFriends(id){
+ setTimeout(()=>{const c=get(id);if(!c)return;c.rx[0]+=1;c.parts.includes('grace')||c.parts.push('grace');const e=cat(c.cat).rx[0][0];addNotif({uid:'grace',type:'react',cid:id,text:`a réagi ${e} à votre célébration.`});toast(`Grâce Mbuyi a réagi ${e} à votre célébration`);render()},2500);
+ setTimeout(()=>{const c=get(id);if(!c)return;c.rx[1]+=2;c.rx[3]+=1;c.msgs.push({uid:'patrick',text:cat(c.cat).msg[0],t:Date.now()});addNotif({uid:'patrick',type:'msg',cid:id,text:'a écrit un message sur votre célébration.'});toast('Patrick Ilunga vous a écrit un message');render()},6000);
+}
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');
+ if(!b){if(e.target.id==='sheet')closeSheet();return}
+ const a=b.dataset.act,id=b.dataset.id,v=b.dataset.v;
+ switch(a){
+  case'tab':S.view=v;S.confirmRm=null;S.detail=null;render();$('#main').scrollTop=0;break;
+  case'filter':S.filter=v;render();break;
+  case'open':S.view='detail';S.detail=id;render();$('#main').scrollTop=0;break;
+  case'back':S.view='feed';S.detail=null;render();break;
+  case'rx':{const c=get(id),i=+b.dataset.i;if(c.mine===i){c.rx[i]--;c.mine=null}else{if(c.mine!=null)c.rx[c.mine]--;c.rx[i]++;c.mine=i}
+   const sc=$('#main').scrollTop;render();$('#main').scrollTop=sc;
+   const nb=document.querySelector(`.rx[data-id="${id}"][data-i="${i}"]`);if(nb&&c.mine===i)nb.classList.add('pop');break}
+  case'sugg':{const t=$('#msgIn');t.value=b.dataset.t;t.focus();break}
+  case'send':{const t=$('#msgIn'),txt=t.value.trim();if(!txt){t.focus();toast('Écrivez un message avant d’envoyer.');return}
+   get(id).msgs.push({uid:'me',text:txt,t:Date.now()});render();toast('Message envoyé');$('#main').scrollTop=$('#main').scrollHeight;break}
+  case'join':{const c=get(id);c.parts.push('me');render();toast(`Vous participez à « ${c.title} »`);break}
+  case'invite':inviteSheet(id);break;
+  case'inv':{const c=get(id);if(!c.inv.includes(v)){c.inv.push(v);toast(`Invitation envoyée à ${U[v].name}`)}inviteSheet(id);break}
+  case'copy':{const txt='https://'+v;const done=()=>toast('Lien copié');
+   try{navigator.clipboard.writeText(txt).then(done,()=>{selectLink();toast('Sélectionnez le lien pour le copier')})}catch(err){selectLink();toast('Sélectionnez le lien pour le copier')}break}
+  case'create':draft={step:1,cat:null,title:'',date:new Date().toISOString().slice(0,10),desc:'',photo:null,vis:'proches'};createSheet();break;
+  case'pickcat':draft.cat=v;createSheet();break;
+  case'step2':if(draft.cat){draft.step=2;createSheet()}break;
+  case'step1':draft.step=1;createSheet();break;
+  case'vis':draft.vis=v;createSheet();break;
+  case'photo':fileTarget=v;$('#fileIn').value='';if(b.tagName!=='LABEL')$('#fileIn').click();break;
+  case'rmphoto':if(v==='draft'){draft.photo=null;createSheet()}else if(v==='profile'){U.me.photo=null;profileSheet();render()}else{get(v.slice(2)).photo=null;render()}toast('Photo retirée');break;
+  case'publish':{if(!draft.title.trim())return;const c={id:'n'+Date.now(),uid:'me',cat:draft.cat,title:draft.title.trim(),desc:draft.desc.trim(),date:draft.date,photo:draft.photo,vis:draft.vis,t:Date.now(),rx:[0,0,0,0],mine:null,parts:['me'],msgs:[],inv:[]};
+   S.celebs.unshift(c);S.view='detail';S.detail=c.id;S.filter='all';render();$('#main').scrollTop=0;toast('Célébration publiée');inviteSheet(c.id);simulateFriends(c.id);break}
+  case'editprofile':profileSheet();break;
+  case'saveprofile':{const n=$('#pName').value.trim();if(!n){toast('Le nom ne peut pas être vide.');return}
+   U.me.name=n;U.me.bio=$('#pBio').value.trim();U.me.city=$('#pCity').value.trim();closeSheet();render();toast('Profil enregistré');break}
+  case'notif':{const n=S.notifs.find(x=>x.id===id);if(n&&n.cid&&get(n.cid)){S.view='detail';S.detail=n.cid;render();$('#main').scrollTop=0}break}
+  case'accept':U[v].rel='proche';S.notifs.filter(n=>n.uid===v&&n.type==='request').forEach(n=>{n.text='fait maintenant partie de vos proches.';n.type='accepted'});render();toast(`${U[v].name} fait partie de vos proches. Ses célébrations apparaissent dans votre fil.`);break;
+  case'decline':U[v].rel='none';S.notifs=S.notifs.filter(n=>!(n.uid===v&&n.type==='request'));render();toast('Demande refusée');break;
+  case'addfriend':U[v].rel='sent';render();toast(`Demande envoyée à ${U[v].name}`);
+   setTimeout(()=>{if(U[v].rel!=='sent')return;U[v].rel='proche';addNotif({uid:v,type:'accepted',text:'a accepté votre demande. Vous êtes maintenant proches.'});toast(`${U[v].name} a accepté votre demande`);render()},4000);break;
+  case'cancelreq':U[v].rel='none';render();toast('Demande annulée');break;
+  case'askrm':S.confirmRm=v;render();break;
+  case'cancelrm':S.confirmRm=null;render();break;
+  case'removefriend':U[v].rel='none';S.confirmRm=null;render();toast(`${U[v].name} ne fait plus partie de vos proches`);break;
+  case'enter':$('#welcome').hidden=true;try{sessionStorage.setItem('wb_seen','1')}catch(err){}$('#main').focus?.();break;
+  case'close':closeSheet();break;
+ }
+});
+function selectLink(){const el=$('#lnk');if(!el)return;const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}
+document.addEventListener('input',e=>{const f=e.target.dataset.field;if(f&&draft){draft[f]=e.target.value;if(f==='title'){const p=$('#pubBtn');if(p)p.disabled=!draft.title.trim()}}});
+document.addEventListener('input',e=>{if(e.target.id!=='searchIn')return;const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#main .contact').forEach(r=>r.hidden=!!q&&!r.dataset.name.includes(q))});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches?.('.notif[role=button]')){e.target.click();return}if(e.key==='Escape'&&!$('#sheet').hidden)closeSheet()});
+$('#fileIn').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{if(fileTarget==='draft'){draft.photo=r.result;createSheet()}else if(fileTarget&&fileTarget.startsWith('c:')){const c=get(fileTarget.slice(2));if(c){c.photo=r.result;render();toast('Photo de la célébration mise à jour')}}else{U.me.photo=r.result;if(!$('#sheet').hidden)profileSheet();render();toast('Photo de profil mise à jour')}};r.readAsDataURL(f)});
+render();
+try{if(sessionStorage.getItem('wb_seen'))$('#welcome').hidden=true}catch(err){}
+</script>
+</body></html>
